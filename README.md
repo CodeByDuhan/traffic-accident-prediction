@@ -1,143 +1,210 @@
-## Trafik Kazası Tahmin Sistemi (Staj Projesi – DataBoss, ODTÜ Teknokent)
+# Traffic Accident Prediction System  
+**Internship Project – DataBoss, ODTÜ Teknokent**
 
-Merhaba, bu proje stajım süresince geliştirdiğim bir trafik kazası tahmin sistemidir.  
-Amacım, şehir bazlı saatlik hava durumu verilerinden yola çıkarak bir sonraki saat için trafik kazası olup olmayacağını öngörmekti.
+Hello, this project is a traffic accident prediction system that I developed during my internship.  
+My goal was to predict whether a traffic accident would occur in the **next hour**, using **city-level hourly weather data**.
 
-Bu repo, geliştirme sürecimde kullandığım tüm veri işleme, model eğitimi, görselleştirme, API ve arayüz dosyalarını içeriyor.  
-Projenin son halini hem Flask API olarak servis ettim ve de Streamlit ile görsel dashboardlar hazırladım.
+This repository contains the full development pipeline I used throughout the project, including:
+- data collection and preprocessing
+- feature engineering and labeling
+- model training and evaluation
+- model interpretability analysis
+- Flask API deployment
+- Streamlit dashboards
 
----
+## Project Motivation
 
-##  Neyi Amaçladım?
+For me, this project was not only about building a prediction model.  
+I also wanted to achieve the following:
 
-Benim için bu proje sadece bir tahmin modeli kurmak değildi.  
-Aynı zamanda aşağıdaki hedeflere ulaşmak istedim:
+- compare different models and identify the most effective approach
+- work with real-world data and perform practical data engineering
+- deploy a trained model as an API
+- understand model behavior through SHAP and PDP analysis
+- build dashboards for end users
 
-- Farklı modelleri karşılaştırarak en doğru tahmini yapabilen yapıyı bulmak
-- Veriyle uğraşmak, etiketlemek, veri mühendisliği yapmak
-- Bir modeli kullanıcıya API olarak sunmak
-- Modelin nasıl düşündüğünü SHAP ve PDP ile analiz etmek
-- Kullanıcılar için dashboard oluşturmak
+## Data Collection and Preparation
 
----
+This project required me to build a meaningful dataset from scratch.
 
----
+- I collected hourly weather data using the Open-Meteo API.
+- Since Open-Meteo works with coordinates, I first gathered latitude and longitude information for Turkish cities in `turkiye_il_koordinatlar.csv`.
+- Using those coordinates, I collected hourly weather data for **81 cities** between **2022 and 2024**.
+- I then integrated yearly city-based traffic accident counts from TÜİK in `accident_counts_2022_2024.csv`.
+- As a result, I obtained a dataset that combines hourly observations with yearly accident count information.
 
-##  Veri Toplama ve Hazırlama Sürecim
+Because some datasets are large, only the main project data files are included in the repository.
 
-> Bu proje için veriyi sıfırdan ve anlamlı bir şekilde hazırlamam gerekiyordu.
+## Weather Type Simplification
 
-- Saatlik hava durumu verilerini Open-Meteo API üzerinden çektim.
-- Open-Meteo koordinatlarla çalıştığı için önce Türkiye’deki illerin enlem-boylam bilgilerini Turkiye_il_koordinatlar.csv dosyasında topladım.
-- Bu koordinatları kullanarak 2022–2024 yılları arasında 81 şehir için saatlik hava verisini çekip birleştirdim
-- Ardından TÜİK’ten aldığım şehir bazlı yıllık toplam trafik kazası sayılarını, hava durumu verileriyle eşleştirdim(accident_counts_2022_2024.csv)
-- Böylece her şehir için saatlik gözlem + yıllık kaza sayısı bilgisine sahip veri setini elde ettim.
+The `weathercode` feature returned by Open-Meteo contains many different categories.  
+To simplify the learning process, I converted it into three broader groups:
 
--(Veri setleri 100 mb tan büyük olduğundan data klasöründe ana başlıklarını bıraktım sadece.)
----
+- `rain`
+- `snow`
+- `none`
 
-## Yağış Türü Kategorileştirmesi (weathercode)
+This made it easier for the model to interpret weather conditions.
 
-Open-Meteo’dan gelen weathercode sütunu çok sayıda farklı hava durumu kodu içerdiği için bunu basitleştirdim.  
-Her gözlem için hava durumunu şu üç gruptan birine çevirdim:
+## Data Augmentation: `is_saganak`
 
-- yağmur
-- kar
-- yok
+In the early stage, the model struggled to learn the `is_saganak` feature, which represents heavy rain.
 
-Bu sayede modelin yağış türünü yorumlaması kolaylaştı.
+The main reason was that this condition was relatively rare in the dataset.  
+To address this, I:
 
----
+- filtered rows where `is_saganak = 1`
+- duplicated those rows with a controlled ratio and added them back into the dataset
 
-## Veri Augmentasyonu: is_saganak
+This allowed the model to see heavy-rain cases more often and learn the feature more meaningfully.
 
-Model ilk aşamada is_saganak (sağanak yağış var mı) değişkenini öğrenmekte zorlandı.  
-Bunun nedeni, veri setinde bu durumun nadir görülmesiydi. Bu yüzden:
+It also supported a real-world assumption I considered during the project:  
+when rainfall becomes extremely heavy, drivers may behave more cautiously and reduce their speed, which can lower accident probability.
 
-- is_saganak = 1 olan satırları filtreledim
-- Bu satırları uygun oranla veri setine çoğaltma işlemi uygulayarak yeniden ekledim (15 bin veri, genel orana göre %10 un biraz üzerine çıkardım.)
+## Model Development Process
 
-> Böylece model, sağanak yağışın olduğu durumları daha iyi görebildi ve bu özelliği daha anlamlı şekilde öğrenmeye başladı.
-Böylelikle aşırı sağanak olduğunda sürücülerin ekstra yavaş ve dikkatli gideceğini varsayarak kaza tahmin oranını düşürmeyi başardım.
+I planned model development in three stages:
 
-##  Model Geliştirme Sürecim
+1. `basic` — baseline models without additional optimization  
+2. `op` — improved version with feature engineering and hyperparameter tuning  
+3. `op2` — final version with extended features and stronger binary indicators  
 
-Model geliştirmeyi 3 aşamalı olarak planladım:
-
-1. basic: Hiçbir optimizasyon yapmadan modelleri test ettim  
-2. op: Daha iyi performans için feature engineering ve hyperparametre tuning yaptım  
-3. op2: Son olarak özellikleri genişletip önemli binary feature’ları doğrudan ekledim
-
->  Bu yaklaşımı daha önceki CNN projemden ilham alarak yaptım.  
-> O projede de kademe kademe ilerleyerek en iyi sonucu aramıştım.  
-> Ama bu kez görüntü değil sadece sayısal veriler kullandığım için sonuçlar arası fark daha sınırlı kaldı.
-
----
+This staged approach was inspired by a previous CNN project of mine, where I also improved performance step by step.  
+However, because this project uses tabular data rather than images, the performance gains between stages were more incremental.
 
 ### Logistic Regression
 
-Başta Logistic Regression da eklemiştim ama:
+I initially included Logistic Regression as well, but later removed it because:
 
-- Doğrusal olduğu için non-linear ilişkileri yakalayamadı
-- Performansı oldukça düşüktü
+- it could not capture non-linear relationships effectively
+- its performance was significantly lower than the other models
 
-Bu yüzden bu repo dosyalarında yer almadı, koddan da çıkardım.
+For that reason, it is no longer part of the final repository pipeline.
 
----
+## Model Results
 
-## Model Sonuçları
+| Model | Version | Accuracy | Precision | Recall |
+|-------|---------|----------|-----------|--------|
+| XGBoost | basic | 0.7714 | 0.7324 | 0.7897 |
+| XGBoost | optimized | 0.7713 | 0.7319 | 0.7904 |
+| **XGBoost** | **optimized2** | **0.7951** | **0.7434** | **0.8490** |
+| Neural Network | optimized2 | 0.8013 | 0.7634 | 0.8253 |
 
-| Model          | Versiyon     | Accuracy | Precision | Recall |
-|----------------|--------------|----------|-----------|--------|
-| XGBoost        | basic        | 0.7714   | 0.7324    | 0.7897 |
-| XGBoost        | optimized    | 0.7713   | 0.7319    | 0.7904 |
-| **XGBoost**    | optimized2   | **0.7951** | **0.7434**  | **0.8490** |
-| Neural Network | optimized2   | 0.8013   | 0.7634    | 0.8253 |
+My final deployed model is **XGBoost (op2)**.  
+I kept **Neural Network (op2)** as an alternative dashboard model.
 
-### Final deploy ettiğim model: XGBoost (op2) 
-### Alternatif dashboard modeli: Neural Network (op2)
+## Labeling Strategy and the 60% Constraint
 
----
+The original accident data was available as **yearly accident counts per city**.  
+If I had directly mapped those counts to hourly rows, the problem would have behaved more like regression.
 
-##  Etiketleme ve %60 Sınırı
+Since I wanted to build a classification model, I distributed accidents across hourly rows using a **risk-score-based probabilistic sampling approach**.
 
-Veride şehir-yıl bazlı toplam kaza sayısı vardı. Bunları saatlik veriyle doğrudan eşleştirmek regresyon gibi çalışırdı.  
-Ama ben sınıflandırma modeli kurduğum için, kazaları risk_score oranlarına göre dağıttım (probabilistic sampling).  
-Yani aslında:
+In other words:
 
-> Saatlik hava durumu özelliklerine göre kaza olma ihtimali üzerinden kazaları dağıttım.
+> I distributed accident labels according to the estimated accident risk derived from hourly weather conditions.
 
-Ama bu dağılımı da kontrollü tuttum çünkü çok fazla 1 verirsem model overfit olurdu.  
-Bu yüzden:  
-> Ya şehir-yıldaki toplam kaza sayısı kadar (3 yıldaki toplam saat sayısının %60 kadarını geçmediyse) 
-> Ya da toplam saatlerin maksimum %60'ı kadar kaza etiketi verdim
+At the same time, I needed to control the distribution.  
+If I assigned too many positive labels, the model could overfit.  
+For that reason, I limited the number of positive labels to either:
 
----
+- the real yearly accident count for that city-year, if it stayed below the cap
+- or a maximum of **60% of total hourly observations** for that city-year
 
-### Uygulanan Kod Mantığı (veri etiketi sayısını belirleme)
+### Label Count Logic
 
-Kazaları dağıtırken, sadece TÜİK’ten gelen sayı yeterli değildi.  
-Ben modelin öğrenmesini dengede tutmak için her şehir-yıl kombinasyonunda şu satırı kullandım:
+While assigning accidents, using only the TÜİK yearly count was not enough.  
+To keep learning more balanced, I used the following logic for each city-year subset:
 
-
+```python
 max_allowed = int(len(sub_df) * MAX_POSITIVE_RATE)
 allowed = min(count, max_allowed)
+```
 
+Where:
 
-Burada:
--  sub_df: O şehir-yıla ait saatlik veri (örneğin 1 yıl * 8760 saat)
--  count: O yıl için TÜİK’ten gelen toplam kaza sayısı
--  MAX_POSITIVE_RATE: %60 olarak sabit tanımlandı
--  allowed: O şehir-yıl için en fazla kaç tane "kaza oldu" etiketi verebileceğimi hesapladı
+- `sub_df` is the hourly data for a given city-year
+- `count` is the yearly accident count from TÜİK
+- `MAX_POSITIVE_RATE` is fixed at 60%
+- `allowed` is the maximum number of positive labels I allow for that city-year
 
-> Bu şekilde hem gerçek kaza sayılarına bağlı kaldım, hem de toplam saat sayısının %60’ını geçmemeyi garanti ederek modeli dengesiz veriyle eğitmedim.
+This helped me stay consistent with real accident counts while also preventing the dataset from becoming too imbalanced.
 
-##  Flask API (XGBoost-op2 Modeli)
-	python3 flask_dep.py
+## Model Interpretability
 
+To understand how the final models behaved, I generated SHAP, PDP, and feature importance visualizations.
 
-### POST /predict
-  json
+In the global view, I observed that low-frequency features tended to appear lower than more common features.  
+However, when I inspected them separately, I could still see that they contributed meaningfully to model behavior.
+
+The main features I focused on were:
+
+- `is_saganak`
+- `dangerous_temp`
+- `risky_rain`
+- `is_night`
+
+### XGBoost Feature Importance
+
+<p align="center">
+  <img src="reports/figures/xgb_feature_importance.png" width="75%">
+</p>
+
+### XGBoost SHAP Summary
+
+<p align="center">
+  <img src="reports/figures/xgb_shap_summary.png" width="75%">
+</p>
+
+### XGBoost Partial Dependence Plot
+
+<p align="center">
+  <img src="reports/figures/xgb_pdp.png" width="75%">
+</p>
+
+### Heavy Rain Effect: `is_saganak`
+
+<p align="center">
+  <img src="reports/figures/xgb_pdp_is_saganak.png" width="75%">
+</p>
+
+### SHAP Dependence on `is_night`
+
+<p align="center">
+  <img src="reports/figures/xgb_shap_dependence_is_night.png" width="75%">
+</p>
+
+### SHAP Dependence on `risky_rain`
+
+<p align="center">
+  <img src="reports/figures/xgb_shap_dependence_risky_rain.png" width="75%">
+</p>
+
+### SHAP Dependence on `is_saganak`
+
+<p align="center">
+  <img src="reports/figures/xgb_shap_dependence_is_saganak.png" width="75%">
+</p>
+
+### Neural Network Permutation Importance
+
+<p align="center">
+  <img src="reports/figures/nn_permutation_importance.png" width="75%">
+</p>
+
+## Flask API
+
+The deployed API uses the **XGBoost op2** model.
+
+Run:
+
+```bash
+python src/api/flask_dep.py
+```
+
+### Example Request
+
+```json
 {
   "city": "Ankara",
   "yağış_türü": "yağmur",
@@ -146,48 +213,137 @@ Burada:
   "windspeed_10m": 12.3,
   "precipitation": 3.2
 }
+```
 
+### Example Response
 
-  json
+```json
 {
   "prediction": 1,
   "probability": 0.7821
 }
+```
 
+## Dashboards
 
----
+I also prepared two separate Streamlit dashboards:
 
-##  Dashboardlar
+- `src/dashboard/dashboard_xgb.py` for XGBoost
+- `src/dashboard/dashboard_nn.py` for Neural Network
 
-- `dashboard_xgb.py` → XGBoost için tahmin arayüzü  
-- `dashboard_nn.py` → Neural Network için ayrı arayüz
+Both dashboards:
+- take city and weather inputs from the user
+- compute derived features such as `is_saganak`, `risky_rain`, and `dangerous_temp` in the backend
+- return accident predictions interactively
 
-Her iki dashboard da:
-- Şehir ve hava durumu girince modelden tahmin alıyor
-- Model içindeki `is_saganak`, `risky_rain`, `dangerous_temp` gibi feature’ları backend’de otomatik hesaplıyor
+## Repository Structure
 
----
+```text
+traffic-accident-prediction/
+├── data/
+│   ├── raw/
+│   │   ├── accident_counts_2022_2024.csv
+│   │   └── turkiye_il_koordinatlar.csv
+│   ├── interim/
+│   │   └── weather_all_cleaned.csv
+│   └── processed/
+│       ├── final_dataset_t+1.csv
+│       └── augmented_final_dataset_t+1.csv
+├── models/
+│   ├── op/
+│   └── op2/
+├── reports/
+│   ├── figures/
+│   ├── results_basic/
+│   ├── results_op/
+│   └── results_op2/
+├── src/
+│   ├── data_configurations/
+│   ├── training/
+│   ├── analysis/
+│   ├── dashboard/
+│   └── api/
+├── requirements.txt
+└── README.md
+```
 
-##  Görselleştirme (SHAP & PDP)
+## How to Run
 
-Modelin nasıl düşündüğünü anlamak için SHAP, PDP ve feature importance görselleri oluşturdum.
-Genel yapıda, az veriye sahip feature lar verideki yaygın featurelara göre altta kaldığını gördüm. fakat ayrı olarak
-Baktığımda hepsinin model öğrenmesinde bir etken olduğunu gördüm
+### 1. Clone the repository
 
-Özellikle şu özellikleri görselleştirdim:
+```bash
+git clone https://github.com/CodeByDuhan/traffic-accident-prediction.git
+cd traffic-accident-prediction
+```
 
-- is_saganak
-- dangerous_temp
-- risky_rain
-- is_night
+### 2. Create and activate a virtual environment
 
-Görseller: results_op2_MAIN/ klasöründe
+```bash
+python -m venv venv
+source venv/bin/activate
+```
 
+On Windows:
 
+```bash
+venv\Scripts\activate
+```
 
-## Geliştirici Bilgisi
+### 3. Install dependencies
 
-- İsim: Duhan Aydın  
-- Staj Yeri: DataBoss, ODTÜ Teknokent  
-- Proje Türü: Gerçek veriyle tahmin sistemi (binary classification)  
- 
+```bash
+pip install -r requirements.txt
+```
+
+If you want to run the dashboards or neural network scripts and your local environment does not already include them, you may also need:
+
+```bash
+pip install streamlit tensorflow
+```
+
+### 4. Run the Flask API
+
+```bash
+python src/api/flask_dep.py
+```
+
+### 5. Run the dashboards
+
+XGBoost dashboard:
+
+```bash
+streamlit run src/dashboard/dashboard_xgb.py
+```
+
+Neural Network dashboard:
+
+```bash
+streamlit run src/dashboard/dashboard_nn.py
+```
+
+### 6. Run training scripts
+
+```bash
+python src/training/train_basic.py
+python src/training/train_op.py
+python src/training/train_op2.py
+```
+
+### 7. Run analysis scripts
+
+```bash
+python src/analysis/feature_importance.py
+python src/analysis/pdp.py
+python src/analysis/pdp_saganak.py
+python src/analysis/xgb_shap_dependecy_plot.py
+python src/analysis/nn_shap_dependecy.py
+python src/analysis/shap_RF_XGb_NN.py
+```
+
+## Developer Information
+
+Duhan Aydın  
+Computer Engineering Graduate  
+Intern at DataBoss, ODTÜ Teknokent
+
+This project reflects my effort to build not only a working machine learning model, but also a full pipeline that includes data preparation, controlled labeling, interpretability, deployment, and user-facing interfaces.
