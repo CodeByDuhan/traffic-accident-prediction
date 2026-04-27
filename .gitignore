@@ -1,0 +1,74 @@
+# =========================
+# Data files
+# =========================
+
+# Ignore all files inside data/
+data/**/*
+
+# Keep data folder structure
+!data/
+!data/raw/
+!data/interim/
+!data/processed/
+
+# Keep placeholder files
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+# =========================
+# PYTHON
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyc
+
+# =========================
+# VIRTUAL ENVIRONMENTS
+# =========================
+venv/
+.venv/
+env/
+
+# =========================
+# IDE / EDITOR
+# =========================
+.idea/
+.vscode/
+
+# =========================
+# MACOS
+# =========================
+.DS_Store
+__MACOSX/
+
+# =========================
+# JUPYTER
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# LOG FILES
+# =========================
+*.log
+
+# =========================
+# TEMP FILES
+# =========================
+*.tmp
+*.swp
+
+# =========================
+# BUILD / DIST
+# =========================
+build/
+dist/
+*.egg-info/
+
+
+
+# =========================
+# Large model artifacts
+# =========================
+models/**/random_forest_*.pkl
+

@@ -1,0 +1,24 @@
+{
+    "run_name": "train_new_dataset_basic",
+    "weighted_training": false,
+    "sample_weight_used_for_tree_models": false,
+    "xgboost_params": {
+        "use_label_encoder": false,
+        "eval_metric": "logloss",
+        "random_state": 42
+    },
+    "random_forest_params": {
+        "random_state": 42
+    },
+    "neural_network_params": {
+        "layers": [
+            "Dense(32, relu)",
+            "Dense(16, relu)",
+            "Dense(1, sigmoid)"
+        ],
+        "learning_rate": 0.001,
+        "validation_split": 0.2,
+        "epochs": 10,
+        "batch_size": 32
+    }
+}

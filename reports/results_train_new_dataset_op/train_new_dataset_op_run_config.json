@@ -1,0 +1,29 @@
+{
+    "run_name": "train_new_dataset_op",
+    "sample_weight_used_for_tree_models": false,
+    "xgboost_params": {
+        "learning_rate": 0.1,
+        "n_estimators": 350,
+        "max_depth": 6,
+        "subsample": 0.9,
+        "colsample_bytree": 0.9,
+        "reg_alpha": 0.8,
+        "reg_lambda": 1.2
+    },
+    "random_forest_params": {
+        "n_estimators": 200,
+        "max_depth": 12,
+        "class_weight": null
+    },
+    "neural_network_changes": {
+        "manual_stratified_validation": true,
+        "validation_split_removed": true,
+        "learning_rate": 0.0005,
+        "early_stopping_patience": 6,
+        "reduce_lr_patience": 3,
+        "dropout_1": 0.2,
+        "dropout_2": 0.1,
+        "epochs": 50,
+        "batch_size": 256
+    }
+}
