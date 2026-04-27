@@ -39,6 +39,56 @@ To represent this behavior, I rebuilt the dataset and separated heavy-rain sampl
 
 ---
 
+## Repository Structure
+
+```text
+traffic-accident-prediction/
+├── data/                         
+│   ├── raw/
+│   │   ├── accident_counts_2022_2024.csv
+│   │   └── turkiye_il_koordinatlar.csv
+│   ├── interim/
+│   │   └── weather_all_cleaned.csv
+│   └── processed/
+│       ├── final_dataset_t+1.csv
+│       ├── 02_corrected_augmented_dataset_t+1.csv
+│       ├── train_corrected_augmented_dataset_t+1.csv
+│       └── test_corrected_augmented_dataset_t+1.csv
+├── models/
+│   ├── train_new_dataset_basic/
+│   └── train_new_dataset_op/
+├── reports/
+│   ├── figures/
+│   │   └── op/
+│   ├── results_train_new_dataset_basic/
+│   └── results_train_new_dataset_op/
+├── src/
+│   ├── data_configurations/
+│   │   ├── kaza_atama.py
+│   │   ├── prepare_augmented_data.py
+│   │   ├── ozellik_kontrol.py
+│   │   ├── mm_kontrol.py
+│   │   └── saganak.py
+│   ├── training/
+│   │   ├── train_new_dataset_basic.py
+│   │   └── train_new_dataset_op.py
+│   ├── analysis/
+│   │   ├── feature_importance_op.py
+│   │   ├── shap_XGb_NN_op.py
+│   │   ├── nn_shap_dependency_op.py
+│   │   └── pdp_saganak_op.py
+│   ├── api/
+│   │   └── flask_dep.py
+│   └── dashboard/
+│       ├── dashboard_xgb.py
+│       └── dashboard_nn.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+
 ## Data Preparation
 
 The dataset combines weather data, city coordinates, and yearly city-level accident counts.
@@ -426,55 +476,6 @@ streamlit run src/dashboard/dashboard_nn.py
 
 ---
 
-## Repository Structure
-
-```text
-traffic-accident-prediction/
-├── data/                         # Ignored by Git; CSV files are documented but not pushed
-│   ├── raw/
-│   │   ├── accident_counts_2022_2024.csv
-│   │   └── turkiye_il_koordinatlar.csv
-│   ├── interim/
-│   │   └── weather_all_cleaned.csv
-│   └── processed/
-│       ├── final_dataset_t+1.csv
-│       ├── 02_corrected_augmented_dataset_t+1.csv
-│       ├── train_corrected_augmented_dataset_t+1.csv
-│       └── test_corrected_augmented_dataset_t+1.csv
-├── models/
-│   ├── train_new_dataset_basic/
-│   └── train_new_dataset_op/
-├── reports/
-│   ├── figures/
-│   │   └── op/
-│   ├── results_train_new_dataset_basic/
-│   └── results_train_new_dataset_op/
-├── src/
-│   ├── data_configurations/
-│   │   ├── kaza_atama.py
-│   │   ├── prepare_augmented_data.py
-│   │   ├── ozellik_kontrol.py
-│   │   ├── mm_kontrol.py
-│   │   └── saganak.py
-│   ├── training/
-│   │   ├── train_new_dataset_basic.py
-│   │   └── train_new_dataset_op.py
-│   ├── analysis/
-│   │   ├── feature_importance_op.py
-│   │   ├── shap_XGb_NN_op.py
-│   │   ├── nn_shap_dependency_op.py
-│   │   └── pdp_saganak_op.py
-│   ├── api/
-│   │   └── flask_dep.py
-│   └── dashboard/
-│       ├── dashboard_xgb.py
-│       └── dashboard_nn.py
-├── requirements.txt
-└── README.md
-```
-
----
-
 ## How to Run
 
 ### 1. Clone the repository
@@ -491,44 +492,19 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-On Windows:
-
-```bash
-venv\Scripts\activate
-```
-
 ### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Generate corrected augmented dataset
-
-```bash
-python src/data_configurations/prepare_augmented_data.py
-```
-
-### 5. Validate the corrected dataset
-
-```bash
-python src/data_configurations/ozellik_kontrol.py
-```
-
-### 6. Train models
-
-```bash
-python src/training/train_new_dataset_basic.py
-python src/training/train_new_dataset_op.py
-```
-
-### 7. Run the Flask API
+### 4. Run the Flask API
 
 ```bash
 python src/api/flask_dep.py
 ```
 
-### 8. Run dashboards
+### 5. Run dashboards
 
 ```bash
 streamlit run src/dashboard/dashboard_xgb.py
