@@ -87,9 +87,8 @@ def create_augmented_samples(
     """
     Belirli bir kaynak dataframe üzerinden jitter ile sentetik örnek üretir.
 
-    Kritik:
-        source_id korunur.
-        Böylece aynı orijinal satırdan türeyen örnekler group split sırasında birlikte kalır.
+    source_id korunur.
+    Böylece aynı orijinal satırdan türeyen örnekler group split sırasında birlikte kalır.
     """
 
     if n_samples <= 0:
