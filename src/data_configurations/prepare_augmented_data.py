@@ -47,13 +47,9 @@ RISKY_GT_10_POS_N = 700
 # FEATURE / FLAG FUNCTIONS
 # ============================================================
 
-def add_basic_flags(df: pd.DataFrame) -> pd.DataFrame:
+def add_basic_flags(df):
     """
     Augmentation kaynaklarını seçebilmek için gerekli temel flag'leri üretir.
-
-    Not:
-        Bu fonksiyon burada kalmalı çünkü augmentation seçimleri
-        is_night, dangerous_temp ve high_wind gibi flag'lere bağlı.
     """
 
     df = df.copy()
@@ -165,7 +161,7 @@ def create_augmented_samples(
     return sampled
 
 
-def create_corrected_augmented_dataset(df: pd.DataFrame) -> pd.DataFrame:
+def create_corrected_augmented_dataset(df):
     """
     Full corrected augmented dataset üretir.
     Daha sonra bu dataset source_id bazlı group split ile train/test'e ayrılır.
@@ -303,7 +299,7 @@ def create_corrected_augmented_dataset(df: pd.DataFrame) -> pd.DataFrame:
 # GROUP SPLIT FUNCTIONS
 # ============================================================
 
-def group_split_dataset(corrected_df: pd.DataFrame):
+def group_split_dataset(corrected_df):
     """
     source_id bazlı GroupShuffleSplit uygular.
 
