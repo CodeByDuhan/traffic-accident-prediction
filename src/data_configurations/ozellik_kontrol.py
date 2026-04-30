@@ -34,12 +34,7 @@ TARGET = "accident_happened_t+1"
 # REPORT FUNCTIONS
 # ============================================================
 
-def print_dataset_shape_report(
-    original_df: pd.DataFrame,
-    corrected_df: pd.DataFrame,
-    train_df: pd.DataFrame,
-    test_df: pd.DataFrame
-) -> None:
+def print_dataset_shape_report(original_df,corrected_df,train_df,test_df):
     print("\n=== DATASET SATIR SAYISI KARŞILAŞTIRMASI ===")
     print(f"Original rows : {len(original_df)}")
     print(f"Corrected rows: {len(corrected_df)}")
@@ -57,7 +52,7 @@ def print_dataset_shape_report(
         print("UYARI: Train + Test toplamı corrected dataset ile eşleşmiyor.")
 
 
-def print_target_distribution_report(df: pd.DataFrame, title: str) -> None:
+def print_target_distribution_report(df, title):
     report = (
         df[TARGET]
         .value_counts(dropna=False)
@@ -72,7 +67,7 @@ def print_target_distribution_report(df: pd.DataFrame, title: str) -> None:
     print(report)
 
 
-def print_precipitation_report(df: pd.DataFrame, title: str) -> None:
+def print_precipitation_report(df, title):
     temp_df = df.copy()
 
     temp_df["precip_bin"] = pd.cut(
@@ -95,7 +90,7 @@ def print_precipitation_report(df: pd.DataFrame, title: str) -> None:
     print(report)
 
 
-def print_feature_bin_report(df: pd.DataFrame, title: str) -> None:
+def print_feature_bin_report(df, title):
     temp_df = df.copy()
 
     feature_bins = {
@@ -129,7 +124,7 @@ def print_feature_bin_report(df: pd.DataFrame, title: str) -> None:
     print(final_report)
 
 
-def print_augmentation_type_report(df: pd.DataFrame, title: str) -> None:
+def print_augmentation_type_report(df, title):
     if "augmentation_type" not in df.columns:
         print(f"\n=== {title} AUGMENTATION TYPE DAĞILIMI ===")
         print("augmentation_type kolonu yok.")
@@ -149,7 +144,7 @@ def print_augmentation_type_report(df: pd.DataFrame, title: str) -> None:
     print(report)
 
 
-def check_source_leakage(train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
+def check_source_leakage(train_df, test_df):
     if "source_id" not in train_df.columns or "source_id" not in test_df.columns:
         print("\n=== SOURCE_ID LEAKAGE CHECK ===")
         print("source_id kolonu train veya test dataset içinde yok.")
@@ -171,10 +166,7 @@ def check_source_leakage(train_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
         print("UYARI: Leakage var. Bazı source_id'ler hem train hem test içinde.")
 
 
-def compare_original_and_corrected_columns(
-    original_df: pd.DataFrame,
-    corrected_df: pd.DataFrame
-) -> None:
+def compare_original_and_corrected_columns(original_df,corrected_df):
     original_cols = set(original_df.columns)
     corrected_cols = set(corrected_df.columns)
 
@@ -188,10 +180,7 @@ def compare_original_and_corrected_columns(
     print(f"Removed columns       : {removed_cols}")
 
 
-def compare_original_and_corrected_precip_bins(
-    original_df: pd.DataFrame,
-    corrected_df: pd.DataFrame
-) -> None:
+def compare_original_and_corrected_precip_bins(original_df,corrected_df):
     original_temp = original_df.copy()
     corrected_temp = corrected_df.copy()
 
