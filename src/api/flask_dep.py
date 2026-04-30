@@ -20,7 +20,7 @@ num_cols = joblib.load(MODEL_DIR / f"num_cols_{RUN_NAME}.pkl")
 binary_cols = joblib.load(MODEL_DIR / f"binary_cols_{RUN_NAME}.pkl")
 
 
-def add_features(df: pd.DataFrame) -> pd.DataFrame:
+def add_features(df):
     df = df.copy()
 
     df["is_saganak"] = (df["precipitation"] > 5).astype(int)
@@ -85,7 +85,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def prepare_input(input_df: pd.DataFrame) -> pd.DataFrame:
+def prepare_input(input_df):
     input_df = add_features(input_df)
 
     missing_cols = [
