@@ -54,7 +54,7 @@ REPORT_DIR.mkdir(parents=True, exist_ok=True)
 # FEATURE ENGINEERING
 # ============================================================
 
-def add_features(df: pd.DataFrame) -> pd.DataFrame:
+def add_features(df):
     df = df.copy()
 
     df["is_saganak"] = (df["precipitation"] > 5).astype(int)
@@ -123,7 +123,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
 # REPORT HELPERS
 # ============================================================
 
-def print_precipitation_distribution(df: pd.DataFrame, title: str) -> None:
+def print_precipitation_distribution(df, title):
     temp_df = df.copy()
 
     temp_df["precip_bin"] = pd.cut(
@@ -146,7 +146,7 @@ def print_precipitation_distribution(df: pd.DataFrame, title: str) -> None:
     print(report)
 
 
-def evaluate_global_metrics(model_name: str, y_true, y_pred, y_proba=None) -> dict:
+def evaluate_global_metrics(model_name, y_true, y_pred, y_proba=None):
     metrics = {
         "run_name": RUN_NAME,
         "model": model_name,
@@ -167,7 +167,7 @@ def evaluate_global_metrics(model_name: str, y_true, y_pred, y_proba=None) -> di
     return metrics
 
 
-def evaluate_precipitation_bins(model_name: str, test_df: pd.DataFrame, y_true, y_pred, y_proba=None) -> pd.DataFrame:
+def evaluate_precipitation_bins(model_name, test_df, y_true, y_pred, y_proba=None):
     eval_df = test_df.copy()
     eval_df["y_true"] = np.asarray(y_true)
     eval_df["y_pred"] = np.asarray(y_pred)
@@ -211,7 +211,7 @@ def evaluate_precipitation_bins(model_name: str, test_df: pd.DataFrame, y_true, 
     return pd.DataFrame(rows)
 
 
-def evaluate_context_bins(model_name: str, test_df: pd.DataFrame, y_true, y_pred, y_proba=None) -> pd.DataFrame:
+def evaluate_context_bins(model_name, test_df, y_true, y_pred, y_proba=None):
     eval_df = test_df.copy()
     eval_df["y_true"] = np.asarray(y_true)
     eval_df["y_pred"] = np.asarray(y_pred)
