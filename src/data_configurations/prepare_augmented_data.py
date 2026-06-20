@@ -51,9 +51,6 @@ def add_basic_flags(df: pd.DataFrame) -> pd.DataFrame:
     """
     Augmentation kaynaklarını seçebilmek için gerekli temel flag'leri üretir.
 
-    Not:
-        Bu fonksiyon burada kalmalı çünkü augmentation seçimleri
-        is_night, dangerous_temp ve high_wind gibi flag'lere bağlı.
     """
 
     df = df.copy()
